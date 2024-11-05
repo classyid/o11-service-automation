@@ -1,0 +1,23 @@
+[Unit]
+Description=O11 Streaming Service
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/o11-OTT-v2.2b1
+ExecStart=/opt/o11-OTT-v2.2b1/o11_v22b1-DRMStuff
+Restart=always
+RestartSec=3
+StartLimitIntervalSec=0
+StartLimitBurst=5
+RemainAfterExit=yes
+
+# Logging
+StandardOutput=append:/var/log/o11/service.log
+StandardError=append:/var/log/o11/error.log
+
+[Install]
+WantedBy=multi-user.target
+Required=network.target
