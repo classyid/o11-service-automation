@@ -1,7 +1,5 @@
 # O11 Service Manager
 
-![O11 Service Manager](banner.png)
-
 ## 📑 Deskripsi
 O11 Service Manager adalah tool otomatisasi untuk mengelola layanan streaming O11 di sistem Linux. Tool ini memudahkan administrator sistem dalam mengelola, memantau, dan mengotomatisasi layanan O11 streaming.
 
