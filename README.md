@@ -1,7 +1,5 @@
-# 📺 Panduan O11 Streaming & Tutorial Linux
+# 📺 Panduan O11 Service Automation
 ## Edisi 2024
-
-![O11 Banner](image-placeholder)
 
 ## 🎯 Apa itu O11?
 O11 adalah software streaming server yang powerful untuk:
