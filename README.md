@@ -1,299 +1,142 @@
-# 🚀 Tutorial Setup O11 Auto-start di Ubuntu
-## Panduan Lengkap untuk Pemula
+# Tutorial Instalasi O11 Service Automation
 
-![O11 Tutorial Banner](banner-placeholder)
+## 📝 Overview
+Tutorial ini menjelaskan proses instalasi dan konfigurasi O11 Service Automation pada Ubuntu Server. Berdasarkan logs yang ditampilkan, service berhasil dijalankan di port 1234.
 
-## 📋 Daftar Isi
-- [Pendahuluan](#pendahuluan)
-- [Persiapan Awal](#persiapan-awal)
-- [Langkah-langkah Setup](#langkah-langkah-setup)
-- [Monitoring dan Maintenance](#monitoring-dan-maintenance)
-- [Troubleshooting](#troubleshooting)
+## 🚀 Langkah-langkah Instalasi
 
-## 🎯 Pendahuluan
-
-Tutorial ini akan membantu Anda mengatur O11 streaming server agar bisa auto-start saat sistem reboot. Cocok untuk:
-- Administrator sistem
-- Pengelola streaming server
-- Teknisi IT
-- Pemula yang ingin belajar Linux
-
-## ⚙️ Persiapan Awal
-
-### Prerequisites:
-- Ubuntu 20.04 LTS atau lebih baru
-- Akses root/sudo
-- O11 sudah terinstal di `/opt/o11-OTT-v2.2b1/`
-- Terminal/SSH access
-
-### Tools yang Dibutuhkan:
+### 1. Setup Log Directory
 ```bash
-# Install tools yang diperlukan
-sudo apt-get update
-sudo apt-get install -y mcedit htop iptraf-ng dos2unix
-```
-
-## 📝 Langkah-langkah Setup
-
-### 1. Buat Direktori Log
-```bash
-# Buat direktori untuk log
-sudo mkdir -p /var/log/o11
-
-# Set permission direktori
-sudo chmod 755 /var/log/o11
+# Buat direktori log
+mkdir -p /var/log/o11
+chmod 755 /var/log/o11
 
 # Buat file log
-sudo touch /var/log/o11/service.log
-sudo touch /var/log/o11/error.log
+touch /var/log/o11/service.log
+touch /var/log/o11/error.log
 
-# Set permission file log
-sudo chmod 644 /var/log/o11/service.log
-sudo chmod 644 /var/log/o11/error.log
+# Set permission log files
+chmod 644 /var/log/o11/service.log
+chmod 644 /var/log/o11/error.log
 ```
 
-### 2. Buat Service File
+### 2. Clone Repository
 ```bash
-# Buat/edit service file
-sudo mcedit /etc/systemd/system/o11.service
+cd /opt
+git clone https://github.com/classyid/o11-service-automation.git
 ```
 
-Copy dan paste konfigurasi berikut:
+### 3. Setup Service File
+```bash
+# Copy service file ke systemd
+cd o11-service-automation
+cp o11.service /etc/systemd/system/
+```
+
+### 4. Setup Control Script
+```bash
+# Copy control script
+cp o11-control.sh /usr/local/bin/
+chmod +x /usr/local/bin/o11-control.sh
+```
+
+### 5. Enable dan Start Service
+```bash
+# Reload daemon
+systemctl daemon-reload
+
+# Setup service
+o11-control.sh setup
+
+# Start service
+o11-control.sh start
+```
+
+## 🔍 Verifikasi Instalasi
+
+### 1. Cek Status Service
+```bash
+o11-control.sh status
+```
+Output yang diharapkan:
+```
+[DATE TIME] O11 service is running
+* o11.service - O11 Streaming Service
+     Loaded: loaded (/etc/systemd/system/o11.service; enabled; vendor preset: enabled)
+     Active: active (running)
+```
+
+### 2. Cek Port
+```bash
+nmap localhost
+```
+Output yang diharapkan:
+```
+PORT     STATE SERVICE
+1234/tcp open  hotline  # O11 service running
+```
+
+## ⚠️ Troubleshooting
+
+### Warning yang Muncul
+```
+Unknown key name 'Required' in [Install]
+```
+Solusi: Edit file `/etc/systemd/system/o11.service` dan hapus line:
 ```ini
-[Unit]
-Description=O11 Streaming Service
-After=network.target
-Wants=network-online.target
-
-[Service]
-Type=simple
-User=root
-WorkingDirectory=/opt/o11-OTT-v2.2b1
-ExecStart=/opt/o11-OTT-v2.2b1/o11_v22b1-DRMStuff
-Restart=always
-RestartSec=3
-StartLimitIntervalSec=0
-StartLimitBurst=5
-RemainAfterExit=yes
-
-# Logging
-StandardOutput=append:/var/log/o11/service.log
-StandardError=append:/var/log/o11/error.log
-
-[Install]
-WantedBy=multi-user.target
 Required=network.target
 ```
 
-### 3. Buat Control Script
+### Jika Service Gagal Start
 ```bash
-# Buat/edit control script
-sudo mcedit /usr/local/bin/o11-control.sh
-```
-
-Copy dan paste script berikut:
-```bash
-#!/bin/bash
-
-# Warna untuk output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m'
-
-# Log function
-log() {
-    echo -e "${2:-$YELLOW}[$(date +'%Y-%m-%d %H:%M:%S')] $1${NC}"
-}
-
-# Status check
-status_check() {
-    if systemctl is-active --quiet o11; then
-        log "O11 service is running" "$GREEN"
-        systemctl status o11
-    else
-        log "O11 service is not running" "$RED"
-        return 1
-    fi
-}
-
-# Service setup
-setup() {
-    log "Setting up O11 service..."
-    systemctl daemon-reload
-    systemctl enable o11
-    log "Service setup completed" "$GREEN"
-}
-
-# Start service
-start() {
-    log "Starting O11 service..."
-    systemctl start o11
-    sleep 2
-    status_check
-}
-
-# Stop service
-stop() {
-    log "Stopping O11 service..."
-    systemctl stop o11
-    sleep 2
-    status_check
-}
-
-# Restart service
-restart() {
-    log "Restarting O11 service..."
-    systemctl restart o11
-    sleep 2
-    status_check
-}
-
-# Show logs
-logs() {
-    log "Service Log:"
-    tail -n 50 /var/log/o11/service.log
-    echo ""
-    log "Error Log:"
-    tail -n 50 /var/log/o11/error.log
-}
-
-# Main
-case "$1" in
-    setup)
-        setup
-        ;;
-    start)
-        start
-        ;;
-    stop)
-        stop
-        ;;
-    restart)
-        restart
-        ;;
-    status)
-        status_check
-        ;;
-    logs)
-        logs
-        ;;
-    *)
-        echo "Usage: $0 {setup|start|stop|restart|status|logs}"
-        exit 1
-        ;;
-esac
-
-exit 0
-```
-
-### 4. Set Permission dan Fix Format
-```bash
-# Set execute permission
-sudo chmod +x /usr/local/bin/o11-control.sh
-
-# Fix format file (hapus karakter Windows)
-sudo dos2unix /usr/local/bin/o11-control.sh
-```
-
-### 5. Setup dan Start Service
-```bash
-# Reload daemon
-sudo systemctl daemon-reload
-
-# Setup service
-sudo o11-control.sh setup
-
-# Start service
-sudo o11-control.sh start
-```
-
-## 📊 Monitoring dan Maintenance
-
-### Monitor Resource
-```bash
-# Monitor CPU dan Memory
-htop
-
-# Monitor Network
-iptraf-ng
-
-# Cek disk space
-df -h
-```
-
-### Monitor Service
-```bash
-# Cek status service
-sudo o11-control.sh status
-
-# Lihat log
-sudo o11-control.sh logs
-```
-
-## ❗ Troubleshooting
-
-### Service Tidak Mau Start
-```bash
-# 1. Cek status detail
-sudo systemctl status o11
-
-# 2. Cek log
+# Cek logs
 tail -f /var/log/o11/error.log
 
-# 3. Coba restart
-sudo o11-control.sh restart
+# Restart service
+o11-control.sh restart
 ```
 
-### Format File Error
+## 📊 Monitoring
+
+### Memory Usage
+Berdasarkan log:
+- Memory usage: ~20.7MB
+- Tasks: 7-8 processes
+- CPU usage: minimal
+
+### Perintah Monitoring
 ```bash
-# Jika muncul error "bad interpreter"
-sudo dos2unix /usr/local/bin/o11-control.sh
+# Cek status real-time
+systemctl status o11
+
+# Cek resource usage
+htop -p $(pgrep o11)
 ```
 
-### Permission Error
+## 🛠️ Maintenance
+
+### Daily Checks
 ```bash
-# Fix permission
-sudo chmod +x /usr/local/bin/o11-control.sh
-sudo chmod 755 /opt/o11-OTT-v2.2b1/o11_v22b1-DRMStuff
+# Status service
+o11-control.sh status
+
+# Cek logs
+tail -f /var/log/o11/service.log
+tail -f /var/log/o11/error.log
 ```
 
-## 📚 Command Reference
-
+### Restart Service
 ```bash
-# Perintah Dasar
-sudo o11-control.sh setup    # Setup awal service
-sudo o11-control.sh start    # Start service
-sudo o11-control.sh stop     # Stop service
-sudo o11-control.sh restart  # Restart service
-sudo o11-control.sh status   # Cek status
-sudo o11-control.sh logs     # Lihat log
+o11-control.sh restart
 ```
 
-## 🔍 Tips dan Best Practices
+## 📝 Notes Penting
+1. Service akan auto-start saat boot (enabled)
+2. Running di port 1234
+3. Memory usage stabil di ~21MB
+4. Auto-restart aktif jika terjadi crash
 
-1. **Monitoring Rutin**
-   - Cek status service setiap hari
-   - Monitor penggunaan resource
-   - Review log secara berkala
-
-2. **Maintenance**
-   - Backup konfigurasi secara rutin
-   - Bersihkan log lama
-   - Update sistem secara berkala
-
-3. **Keamanan**
-   - Batasi akses ke file konfigurasi
-   - Monitor akses jaringan
-   - Review permission secara berkala
-
-## 🤝 Kontribusi
-Kontribusi selalu welcome! Silakan buat pull request atau buka issue jika menemukan masalah.
-
-## 📝 Lisensi
-MIT License - silakan gunakan dan modifikasi sesuai kebutuhan.
-
-## 📧 Kontak
-- Email: [email]
-- Telegram: [telegram]
-- GitHub: [github]
+## 🔗 Links Berguna
+- Repository: https://github.com/classyid/o11-service-automation
+- Issues: [GitHub Issues](https://github.com/classyid/o11-service-automation/issues)
+- Wiki: [GitHub Wiki](https://github.com/classyid/o11-service-automation/wiki)
