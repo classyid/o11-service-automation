@@ -1,30 +1,25 @@
-# O11 Service Manager
+# 📺 Panduan O11 Streaming & Tutorial Linux
+## Edisi 2024
 
-## 📑 Deskripsi
-O11 Service Manager adalah tool otomatisasi untuk mengelola layanan streaming O11 di sistem Linux. Tool ini memudahkan administrator sistem dalam mengelola, memantau, dan mengotomatisasi layanan O11 streaming.
+![O11 Banner](image-placeholder)
 
-## ✨ Fitur Utama
-- 🚀 Auto-start saat sistem boot
-- 📊 Monitoring layanan real-time
-- 📝 Manajemen log otomatis
-- 🔄 Auto-restart saat terjadi kegagalan
-- 🎯 Kontrol layanan yang mudah
-- 📱 Notifikasi status layanan
+## 🎯 Apa itu O11?
+O11 adalah software streaming server yang powerful untuk:
+- Mengubah siaran LIVE menjadi format yang lebih friendly (HLS)
+- Mengelola siaran VOD (Video on Demand)
+- Mendukung berbagai format input seperti DASH, HLS, dan Microsoft Smooth Streaming
 
-## 🔧 Persyaratan Sistem
-- Ubuntu 20.04 LTS atau lebih baru
-- Systemd
-- O11 Streaming Server
-- Bash shell
-- Root/sudo access
+Bayangkan O11 seperti "penerjemah universal" untuk konten streaming. Dia bisa mengambil berbagai format video streaming dan mengubahnya menjadi format yang mudah diputar di berbagai perangkat.
 
-## 📦 Instalasi
-```bash
-# Clone repository
-git clone https://github.com/classyid/o11-service-automation.git
+## 💡 Apa itu DASH?
+DASH (Dynamic Adaptive Streaming over HTTP) adalah teknologi streaming modern yang:
+- Menyesuaikan kualitas video secara otomatis berdasarkan koneksi internet
+- Seperti YouTube yang bisa otomatis ubah kualitas 144p-4K
+- Hemat bandwidth dan lancar diputar
 
-# Masuk ke direktori
-cd o11-service-automation
+Analoginya seperti air yang mengalir:
+- Pipa besar (koneksi cepat) = air mengalir deras (kualitas tinggi)
+- Pipa kecil (koneksi lambat) = air mengalir pelan (kualitas lebih rendah)
 
 ## 🛠️ Tutorial Linux untuk O11
 
@@ -74,6 +69,68 @@ sudo systemctl restart o11
 sudo systemctl status o11
 ```
 
+## 📊 Fitur Utama O11
+
+### 1. Provider Management
+- Kelola multiple provider
+- Custom logo per provider
+- Konfigurasi jaringan terpisah
+
+### 2. Stream Control
+- Start/Stop stream
+- Monitor status
+- Auto-restart jika error
+- Log management
+
+### 3. Format Support
+```plaintext
+Input:
+✓ DASH
+✓ HLS
+✓ Microsoft Smooth
+
+Output:
+✓ HLS
+✓ Direct HTTP
+✓ Multi-TS
+```
+
+## 💪 Keunggulan O11
+
+1. **Mudah Digunakan**
+   - Interface web friendly
+   - Kontrol via command line
+   - Auto-configuration
+
+2. **Powerful**
+   - Multi-provider support
+   - Format converter
+   - DRM support
+   - Monitoring tools
+
+3. **Reliable**
+   - Auto-restart
+   - Error handling
+   - Log rotation
+   - Health check
+
+## 🎯 Use Cases
+
+1. **Streaming Provider**
+   - Distribusi konten live
+   - VOD service
+   - Multi-channel broadcasting
+
+2. **Corporate**
+   - Internal streaming
+   - Event broadcast
+   - Training materials
+
+3. **Education**
+   - E-learning platform
+   - Live lecture
+   - Recorded sessions
+
 ## 🔧 Tips & Tricks
 
 1. **Performance**
@@ -114,43 +171,22 @@ status   : sudo systemctl status o11
 logs     : journalctl -u o11 -f
 ```
 
-## 📁 Struktur File
-```
-/etc/systemd/system/o11.service    # Service configuration
-/usr/local/bin/o11-control.sh      # Control script
-/var/log/o11/                      # Log directory
-├── service.log                    # Service logs
-└── error.log                      # Error logs
-```
+## 🎓 Kesimpulan
+O11 adalah solusi streaming yang powerful dan fleksibel. Dengan dokumentasi ini, Anda bisa:
+- Setup O11 dengan mudah
+- Mengelola streaming secara efisien
+- Troubleshoot masalah umum
+- Optimalkan performa sistem
 
-## 🔍 Monitoring
-Service akan otomatis:
-- Start saat sistem boot
-- Restart jika terjadi kegagalan
-- Mencatat semua aktivitas di log
-- Memberikan notifikasi saat terjadi masalah
+## 🔗 Link Berguna
+- [O11 Official Documentation](#)
+- [Community Forum](#)
+- [Video Tutorials](#)
+- [GitHub Repository](#)
 
-## 🛠️ Troubleshooting
+## 🤝 Need Help?
+- Join Telegram Group: @O11Community
+- Email Support: support@o11.example.com
+- GitHub Issues: [Link]
 
-### Service Gagal Start
-```bash
-# Cek detail error
-sudo journalctl -u o11 -f
-
-# Cek log spesifik
-tail -f /var/log/o11/error.log
-```
-
-### Reset Service
-```bash
-sudo o11-control.sh restart
-```
-
-## 🤝 Kontribusi
-Kontribusi selalu welcome! Silakan baca [CONTRIBUTING.md](CONTRIBUTING.md)
-
-## 📝 Lisensi
-Project ini dilisensikan di bawah [MIT License](LICENSE)
-
-## 🌟 Dukungan
-Jika project ini membantu, berikan ⭐️ di GitHub!
+Remember: "Streaming lancar, hidup tentram! 🎬"
