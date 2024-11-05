@@ -1,190 +1,299 @@
-# 📺 Panduan O11 Service Automation
-## Edisi 2024
+# 🚀 Tutorial Setup O11 Auto-start di Ubuntu
+## Panduan Lengkap untuk Pemula
 
-## 🎯 Apa itu O11?
-O11 adalah software streaming server yang powerful untuk:
-- Mengubah siaran LIVE menjadi format yang lebih friendly (HLS)
-- Mengelola siaran VOD (Video on Demand)
-- Mendukung berbagai format input seperti DASH, HLS, dan Microsoft Smooth Streaming
+![O11 Tutorial Banner](banner-placeholder)
 
-Bayangkan O11 seperti "penerjemah universal" untuk konten streaming. Dia bisa mengambil berbagai format video streaming dan mengubahnya menjadi format yang mudah diputar di berbagai perangkat.
+## 📋 Daftar Isi
+- [Pendahuluan](#pendahuluan)
+- [Persiapan Awal](#persiapan-awal)
+- [Langkah-langkah Setup](#langkah-langkah-setup)
+- [Monitoring dan Maintenance](#monitoring-dan-maintenance)
+- [Troubleshooting](#troubleshooting)
 
-## 💡 Apa itu DASH?
-DASH (Dynamic Adaptive Streaming over HTTP) adalah teknologi streaming modern yang:
-- Menyesuaikan kualitas video secara otomatis berdasarkan koneksi internet
-- Seperti YouTube yang bisa otomatis ubah kualitas 144p-4K
-- Hemat bandwidth dan lancar diputar
+## 🎯 Pendahuluan
 
-Analoginya seperti air yang mengalir:
-- Pipa besar (koneksi cepat) = air mengalir deras (kualitas tinggi)
-- Pipa kecil (koneksi lambat) = air mengalir pelan (kualitas lebih rendah)
+Tutorial ini akan membantu Anda mengatur O11 streaming server agar bisa auto-start saat sistem reboot. Cocok untuk:
+- Administrator sistem
+- Pengelola streaming server
+- Teknisi IT
+- Pemula yang ingin belajar Linux
 
-## 🛠️ Tutorial Linux untuk O11
+## ⚙️ Persiapan Awal
 
-### 1. Instalasi O11
+### Prerequisites:
+- Ubuntu 20.04 LTS atau lebih baru
+- Akses root/sudo
+- O11 sudah terinstal di `/opt/o11-OTT-v2.2b1/`
+- Terminal/SSH access
+
+### Tools yang Dibutuhkan:
 ```bash
-# 1. Masuk ke direktori
-cd /opt/o11-OTT-v2.2b1
-
-# 2. Jalankan O11
-./o11_v22b1-DRMStuff
+# Install tools yang diperlukan
+sudo apt-get update
+sudo apt-get install -y mcedit htop iptraf-ng dos2unix
 ```
 
-### 2. Setup Auto-start
+## 📝 Langkah-langkah Setup
+
+### 1. Buat Direktori Log
 ```bash
-# Buat service systemd
-sudo nano /etc/systemd/system/o11.service
+# Buat direktori untuk log
+sudo mkdir -p /var/log/o11
+
+# Set permission direktori
+sudo chmod 755 /var/log/o11
+
+# Buat file log
+sudo touch /var/log/o11/service.log
+sudo touch /var/log/o11/error.log
+
+# Set permission file log
+sudo chmod 644 /var/log/o11/service.log
+sudo chmod 644 /var/log/o11/error.log
 ```
 
-Isi dengan:
+### 2. Buat Service File
+```bash
+# Buat/edit service file
+sudo mcedit /etc/systemd/system/o11.service
+```
+
+Copy dan paste konfigurasi berikut:
 ```ini
 [Unit]
 Description=O11 Streaming Service
 After=network.target
+Wants=network-online.target
 
 [Service]
 Type=simple
+User=root
 WorkingDirectory=/opt/o11-OTT-v2.2b1
 ExecStart=/opt/o11-OTT-v2.2b1/o11_v22b1-DRMStuff
 Restart=always
+RestartSec=3
+StartLimitIntervalSec=0
+StartLimitBurst=5
+RemainAfterExit=yes
+
+# Logging
+StandardOutput=append:/var/log/o11/service.log
+StandardError=append:/var/log/o11/error.log
 
 [Install]
 WantedBy=multi-user.target
+Required=network.target
 ```
 
-### 3. Kontrol O11
+### 3. Buat Control Script
 ```bash
-# Start O11
-sudo systemctl start o11
+# Buat/edit control script
+sudo mcedit /usr/local/bin/o11-control.sh
+```
 
-# Stop O11
-sudo systemctl stop o11
+Copy dan paste script berikut:
+```bash
+#!/bin/bash
 
-# Restart O11
-sudo systemctl restart o11
+# Warna untuk output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
 
-# Cek status
+# Log function
+log() {
+    echo -e "${2:-$YELLOW}[$(date +'%Y-%m-%d %H:%M:%S')] $1${NC}"
+}
+
+# Status check
+status_check() {
+    if systemctl is-active --quiet o11; then
+        log "O11 service is running" "$GREEN"
+        systemctl status o11
+    else
+        log "O11 service is not running" "$RED"
+        return 1
+    fi
+}
+
+# Service setup
+setup() {
+    log "Setting up O11 service..."
+    systemctl daemon-reload
+    systemctl enable o11
+    log "Service setup completed" "$GREEN"
+}
+
+# Start service
+start() {
+    log "Starting O11 service..."
+    systemctl start o11
+    sleep 2
+    status_check
+}
+
+# Stop service
+stop() {
+    log "Stopping O11 service..."
+    systemctl stop o11
+    sleep 2
+    status_check
+}
+
+# Restart service
+restart() {
+    log "Restarting O11 service..."
+    systemctl restart o11
+    sleep 2
+    status_check
+}
+
+# Show logs
+logs() {
+    log "Service Log:"
+    tail -n 50 /var/log/o11/service.log
+    echo ""
+    log "Error Log:"
+    tail -n 50 /var/log/o11/error.log
+}
+
+# Main
+case "$1" in
+    setup)
+        setup
+        ;;
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    restart)
+        restart
+        ;;
+    status)
+        status_check
+        ;;
+    logs)
+        logs
+        ;;
+    *)
+        echo "Usage: $0 {setup|start|stop|restart|status|logs}"
+        exit 1
+        ;;
+esac
+
+exit 0
+```
+
+### 4. Set Permission dan Fix Format
+```bash
+# Set execute permission
+sudo chmod +x /usr/local/bin/o11-control.sh
+
+# Fix format file (hapus karakter Windows)
+sudo dos2unix /usr/local/bin/o11-control.sh
+```
+
+### 5. Setup dan Start Service
+```bash
+# Reload daemon
+sudo systemctl daemon-reload
+
+# Setup service
+sudo o11-control.sh setup
+
+# Start service
+sudo o11-control.sh start
+```
+
+## 📊 Monitoring dan Maintenance
+
+### Monitor Resource
+```bash
+# Monitor CPU dan Memory
+htop
+
+# Monitor Network
+iptraf-ng
+
+# Cek disk space
+df -h
+```
+
+### Monitor Service
+```bash
+# Cek status service
+sudo o11-control.sh status
+
+# Lihat log
+sudo o11-control.sh logs
+```
+
+## ❗ Troubleshooting
+
+### Service Tidak Mau Start
+```bash
+# 1. Cek status detail
 sudo systemctl status o11
+
+# 2. Cek log
+tail -f /var/log/o11/error.log
+
+# 3. Coba restart
+sudo o11-control.sh restart
 ```
 
-## 📊 Fitur Utama O11
-
-### 1. Provider Management
-- Kelola multiple provider
-- Custom logo per provider
-- Konfigurasi jaringan terpisah
-
-### 2. Stream Control
-- Start/Stop stream
-- Monitor status
-- Auto-restart jika error
-- Log management
-
-### 3. Format Support
-```plaintext
-Input:
-✓ DASH
-✓ HLS
-✓ Microsoft Smooth
-
-Output:
-✓ HLS
-✓ Direct HTTP
-✓ Multi-TS
+### Format File Error
+```bash
+# Jika muncul error "bad interpreter"
+sudo dos2unix /usr/local/bin/o11-control.sh
 ```
 
-## 💪 Keunggulan O11
+### Permission Error
+```bash
+# Fix permission
+sudo chmod +x /usr/local/bin/o11-control.sh
+sudo chmod 755 /opt/o11-OTT-v2.2b1/o11_v22b1-DRMStuff
+```
 
-1. **Mudah Digunakan**
-   - Interface web friendly
-   - Kontrol via command line
-   - Auto-configuration
+## 📚 Command Reference
 
-2. **Powerful**
-   - Multi-provider support
-   - Format converter
-   - DRM support
-   - Monitoring tools
+```bash
+# Perintah Dasar
+sudo o11-control.sh setup    # Setup awal service
+sudo o11-control.sh start    # Start service
+sudo o11-control.sh stop     # Stop service
+sudo o11-control.sh restart  # Restart service
+sudo o11-control.sh status   # Cek status
+sudo o11-control.sh logs     # Lihat log
+```
 
-3. **Reliable**
-   - Auto-restart
-   - Error handling
-   - Log rotation
-   - Health check
+## 🔍 Tips dan Best Practices
 
-## 🎯 Use Cases
-
-1. **Streaming Provider**
-   - Distribusi konten live
-   - VOD service
-   - Multi-channel broadcasting
-
-2. **Corporate**
-   - Internal streaming
-   - Event broadcast
-   - Training materials
-
-3. **Education**
-   - E-learning platform
-   - Live lecture
-   - Recorded sessions
-
-## 🔧 Tips & Tricks
-
-1. **Performance**
-   ```bash
-   # Monitor resource usage
-   top -p $(pgrep o11)
-   
-   # Check logs
-   tail -f /var/log/o11/service.log
-   ```
+1. **Monitoring Rutin**
+   - Cek status service setiap hari
+   - Monitor penggunaan resource
+   - Review log secara berkala
 
 2. **Maintenance**
-   ```bash
-   # Cleanup logs
-   find /var/log/o11/ -name "*.log" -mtime +30 -delete
-   
-   # Backup config
-   cp /etc/systemd/system/o11.service /backup/
-   ```
+   - Backup konfigurasi secara rutin
+   - Bersihkan log lama
+   - Update sistem secara berkala
 
-3. **Troubleshooting**
-   ```bash
-   # Debug mode
-   ./o11_v22b1-DRMStuff -debug
-   
-   # Check ports
-   netstat -tulpn | grep o11
-   ```
+3. **Keamanan**
+   - Batasi akses ke file konfigurasi
+   - Monitor akses jaringan
+   - Review permission secara berkala
 
-## 📚 Quick Reference
+## 🤝 Kontribusi
+Kontribusi selalu welcome! Silakan buat pull request atau buka issue jika menemukan masalah.
 
-```bash
-# Basic Commands
-start    : sudo systemctl start o11
-stop     : sudo systemctl stop o11
-restart  : sudo systemctl restart o11
-status   : sudo systemctl status o11
-logs     : journalctl -u o11 -f
-```
+## 📝 Lisensi
+MIT License - silakan gunakan dan modifikasi sesuai kebutuhan.
 
-## 🎓 Kesimpulan
-O11 adalah solusi streaming yang powerful dan fleksibel. Dengan dokumentasi ini, Anda bisa:
-- Setup O11 dengan mudah
-- Mengelola streaming secara efisien
-- Troubleshoot masalah umum
-- Optimalkan performa sistem
-
-## 🔗 Link Berguna
-- [O11 Official Documentation](#)
-- [Community Forum](#)
-- [Video Tutorials](#)
-- [GitHub Repository](#)
-
-## 🤝 Need Help?
-- Join Telegram Group: @O11Community
-- Email Support: support@o11.example.com
-- GitHub Issues: [Link]
-
-Remember: "Streaming lancar, hidup tentram! 🎬"
+## 📧 Kontak
+- Email: [email]
+- Telegram: [telegram]
+- GitHub: [github]
