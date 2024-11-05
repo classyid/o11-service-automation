@@ -76,17 +76,6 @@ PORT     STATE SERVICE
 1234/tcp open  hotline  # O11 service running
 ```
 
-## ⚠️ Troubleshooting
-
-### Warning yang Muncul
-```
-Unknown key name 'Required' in [Install]
-```
-Solusi: Edit file `/etc/systemd/system/o11.service` dan hapus line:
-```ini
-Required=network.target
-```
-
 ### Jika Service Gagal Start
 ```bash
 # Cek logs
@@ -97,12 +86,6 @@ o11-control.sh restart
 ```
 
 ## 📊 Monitoring
-
-### Memory Usage
-Berdasarkan log:
-- Memory usage: ~20.7MB
-- Tasks: 7-8 processes
-- CPU usage: minimal
 
 ### Perintah Monitoring
 ```bash
@@ -133,10 +116,4 @@ o11-control.sh restart
 ## 📝 Notes Penting
 1. Service akan auto-start saat boot (enabled)
 2. Running di port 1234
-3. Memory usage stabil di ~21MB
-4. Auto-restart aktif jika terjadi crash
-
-## 🔗 Links Berguna
-- Repository: https://github.com/classyid/o11-service-automation
-- Issues: [GitHub Issues](https://github.com/classyid/o11-service-automation/issues)
-- Wiki: [GitHub Wiki](https://github.com/classyid/o11-service-automation/wiki)
+3. Auto-restart aktif jika terjadi crash
