@@ -20,4 +20,3 @@ StandardError=append:/var/log/o11/error.log
 
 [Install]
 WantedBy=multi-user.target
-Required=network.target
